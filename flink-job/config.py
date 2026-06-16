@@ -1,0 +1,9 @@
+KAFKA_BOOTSTRAP_SERVERS = "kafka:9092"
+
+USER_EVENTS_TOPIC = "user-events"
+
+CONTENT_METADATA_TOPIC = "content-metadata"
+
+FEATURE_STORE_TOPIC = "feature-store"
+
+WATERMARK_DELAY_SECONDS = 30

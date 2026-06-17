@@ -111,7 +111,10 @@ services:
 
   dashboard:
     build: ./dashboard
+    container_name: dashboard
 
+    ports:
+      - "8501:8501"
     depends_on:
       kafka:
         condition: service_healthy
@@ -121,3 +124,5 @@ services:
       interval: 20s
       timeout: 10s
       retries: 5
+    
+    restart: unless-stopped

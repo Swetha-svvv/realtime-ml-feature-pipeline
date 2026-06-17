@@ -1,4 +1,7 @@
+import json
+import pandas as pd
 import streamlit as st
+from kafka import KafkaConsumer
 
 st.set_page_config(
     page_title="Real-Time ML Dashboard",
@@ -6,47 +9,39 @@ st.set_page_config(
     layout="wide"
 )
 
-st.title("📊 Real-Time ML Feature Dashboard")
+st.title("📊 Real-Time ML Dashboard")
+st.write("Live User Events from Kafka")
 
-st.write("Apache Kafka + Apache Flink Feature Engineering Pipeline")
-
-user_id = st.text_input(
-    "Enter User ID",
-    "user_1"
+consumer = KafkaConsumer(
+    "user-events",
+    bootstrap_servers="kafka:9092",
+    group_id=None,                      # Don't commit offsets
+    auto_offset_reset="earliest",       # Read available events
+    enable_auto_commit=False,
+    consumer_timeout_ms=3000,
+    value_deserializer=lambda x: json.loads(x.decode("utf-8"))
 )
 
-st.subheader("User Features")
+events = []
 
-st.metric(
-    "Click Rate",
-    "--"
-)
+try:
+    for message in consumer:
+        events.append(message.value)
 
-st.metric(
-    "Average Dwell Time",
-    "--"
-)
+        # Show only the latest 50 events
+        if len(events) >= 50:
+            break
+finally:
+    consumer.close()
 
-st.subheader("Content Features")
+if events:
+    df = pd.DataFrame(events)
 
-st.metric(
-    "Engagement Rate",
-    "--"
-)
+    st.success(f"Loaded {len(df)} events from Kafka")
 
-st.subheader("Pipeline Metrics")
-
-st.metric(
-    "Feature Freshness",
-    "--"
-)
-
-st.metric(
-    "Late Events",
-    "--"
-)
-
-st.metric(
-    "Watermark Lag",
-    "--"
-)
+    st.dataframe(
+        df.tail(50),
+        use_container_width=True
+    )
+else:
+    st.warning("No events found.")
